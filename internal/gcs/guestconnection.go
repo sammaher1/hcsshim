@@ -178,6 +178,24 @@ func (gc *GuestConnection) Modify(ctx context.Context, settings interface{}) (er
 	return gc.brdg.RPC(ctx, rpcModifySettings, &req, &resp, false)
 }
 
+// Shutdown the null container (container host) with specified option
+func (gc *GuestConnection) Shutdown(ctx context.Context, force bool) error {
+	rpcProc := rpcShutdownGraceful
+	if force {
+		rpcProc = rpcShutdownForced
+	}
+
+	req := makeRequest(ctx, nullContainerID)
+	var resp responseBase
+	err := gc.brdg.RPC(ctx, rpcProc, &req, &resp, true)
+	if err != nil {
+		if uint32(resp.Result) != hrComputeSystemDoesNotExist {
+			return err
+		}
+	}
+	return nil
+}
+
 func (gc *GuestConnection) DumpStacks(ctx context.Context) (response string, err error) {
 	ctx, span := oc.StartSpan(ctx, "gcs::GuestConnection::DumpStacks", oc.WithClientSpanKind)
 	defer span.End()

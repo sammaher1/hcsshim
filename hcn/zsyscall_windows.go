@@ -78,6 +78,10 @@ var (
 	procHcnQuerySdnRouteProperties     = modcomputenetwork.NewProc("HcnQuerySdnRouteProperties")
 	procSetCurrentThreadCompartmentId  = modiphlpapi.NewProc("SetCurrentThreadCompartmentId")
 	procHNSCall                        = modvmcompute.NewProc("HNSCall")
+	procHcnRegisterServiceCallback     = modcomputenetwork.NewProc("HcnRegisterServiceCallback")
+	procHcnUnregisterServiceCallback   = modcomputenetwork.NewProc("HcnUnregisterServiceCallback")
+	procHcnRegisterNetworkCallback     = modcomputenetwork.NewProc("HcnRegisterNetworkCallback")
+	procHcnUnregisterNetworkCallback   = modcomputenetwork.NewProc("HcnUnregisterNetworkCallback")
 )
 
 func hcnCloseEndpoint(endpoint hcnEndpoint) (hr error) {
@@ -656,6 +660,62 @@ func hcnOpenRoute(id *_guid, route *hcnRoute, result **uint16) (hr error) {
 		return
 	}
 	r0, _, _ := syscall.SyscallN(procHcnOpenSdnRoute.Addr(), uintptr(unsafe.Pointer(id)), uintptr(unsafe.Pointer(route)), uintptr(unsafe.Pointer(result)))
+	if int32(r0) < 0 {
+		if r0&0x1fff0000 == 0x00070000 {
+			r0 &= 0xffff
+		}
+		hr = syscall.Errno(r0)
+	}
+	return
+}
+
+func hcnRegisterServiceCallback(callback uintptr, context uintptr, callbackHandle *hcnCallbackHandle) (hr error) {
+	if hr = procHcnRegisterServiceCallback.Find(); hr != nil {
+		return
+	}
+	r0, _, _ := syscall.Syscall(procHcnRegisterServiceCallback.Addr(), 3, uintptr(callback), uintptr(context), uintptr(unsafe.Pointer(callbackHandle)))
+	if int32(r0) < 0 {
+		if r0&0x1fff0000 == 0x00070000 {
+			r0 &= 0xffff
+		}
+		hr = syscall.Errno(r0)
+	}
+	return
+}
+
+func hcnUnregisterServiceCallback(callbackHandle hcnCallbackHandle) (hr error) {
+	if hr = procHcnUnregisterServiceCallback.Find(); hr != nil {
+		return
+	}
+	r0, _, _ := syscall.Syscall(procHcnUnregisterServiceCallback.Addr(), 1, uintptr(callbackHandle), 0, 0)
+	if int32(r0) < 0 {
+		if r0&0x1fff0000 == 0x00070000 {
+			r0 &= 0xffff
+		}
+		hr = syscall.Errno(r0)
+	}
+	return
+}
+
+func hcnRegisterNetworkCallback(network hcnNetwork, callback uintptr, context uintptr, callbackHandle *hcnCallbackHandle) (hr error) {
+	if hr = procHcnRegisterNetworkCallback.Find(); hr != nil {
+		return
+	}
+	r0, _, _ := syscall.Syscall6(procHcnRegisterNetworkCallback.Addr(), 4, uintptr(network), uintptr(callback), uintptr(context), uintptr(unsafe.Pointer(callbackHandle)), 0, 0)
+	if int32(r0) < 0 {
+		if r0&0x1fff0000 == 0x00070000 {
+			r0 &= 0xffff
+		}
+		hr = syscall.Errno(r0)
+	}
+	return
+}
+
+func hcnUnregisterNetworkCallback(callbackHandle hcnCallbackHandle) (hr error) {
+	if hr = procHcnUnregisterNetworkCallback.Find(); hr != nil {
+		return
+	}
+	r0, _, _ := syscall.Syscall(procHcnUnregisterNetworkCallback.Addr(), 1, uintptr(callbackHandle), 0, 0)
 	if int32(r0) < 0 {
 		if r0&0x1fff0000 == 0x00070000 {
 			r0 &= 0xffff
